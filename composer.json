@@ -1,0 +1,61 @@
+{
+  "name": "kojirock5260/laravel-openapi-probe",
+  "description": "Generate requests from an OpenAPI document, send them to your Laravel app in-process, and report where the responses disagree with the document",
+  "keywords": [
+    "laravel",
+    "openapi",
+    "api",
+    "testing",
+    "fuzzing",
+    "contract testing"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "kojirock5260",
+      "email": "kojirock5260@gmail.com"
+    }
+  ],
+  "require": {
+    "php": "^8.3",
+    "illuminate/console": "^12.0|^13.0",
+    "illuminate/database": "^12.0|^13.0",
+    "illuminate/http": "^12.0|^13.0",
+    "illuminate/routing": "^12.0|^13.0",
+    "illuminate/support": "^12.0|^13.0",
+    "kojirock5260/laravel-json-schema-validate": "^4.0",
+    "symfony/yaml": "^7.0|^8.0"
+  },
+  "require-dev": {
+    "laravel/pint": "^1.30",
+    "orchestra/testbench": "^10.0|^11.1",
+    "pestphp/pest": "^4.0|^5.0",
+    "pestphp/pest-plugin-laravel": "^4.0|^5.0",
+    "phpstan/phpstan": "^2.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Kojirock5260\\OpenApiProbe\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Kojirock5260\\OpenApiProbe\\Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Kojirock5260\\OpenApiProbe\\OpenApiProbeServiceProvider"
+      ]
+    }
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

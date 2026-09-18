@@ -1,0 +1,20 @@
+openapi: 3.0.3
+info:
+  title: Legacy API
+  version: 1.0.0
+paths:
+  /profiles:
+    get:
+      operationId: listProfiles
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [nickname]
+                properties:
+                  nickname:
+                    type: string
+                    nullable: true
