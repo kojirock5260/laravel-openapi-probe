@@ -8,11 +8,12 @@ built on Laravel's own request pipeline.
 
 [日本語](README.ja.md)
 
-Builds on [kojirock5260/laravel-json-schema-validate](https://github.com/kojirock5260/laravel-json-schema-validate),
-which loads the document and validates responses. Requires PHP 8.3 and Laravel 12 or 13.
+Requires PHP 8.3 and Laravel 12 or 13. It stands alone: the document is parsed with
+[cebe/php-openapi](https://github.com/DEVizzent/cebe-php-openapi) and responses are checked with
+[opis/json-schema](https://opis.io/json-schema/).
 
-OpenAPI 3.1 documents are read as they are. OpenAPI 3.0 documents are normalized on the fly
-(`nullable: true` becomes a type union) into a temporary copy; your file is not touched.
+OpenAPI 3.1 documents are read as they are. OpenAPI 3.0 documents are normalized in memory
+(`nullable: true` becomes a type union); your file is not touched.
 
 ## What it does
 
@@ -46,13 +47,14 @@ may be deliberate leniency.
 composer require --dev kojirock5260/laravel-openapi-probe
 ```
 
-Point the underlying package at your document, see its README for the
-options:
+Tell it where the document is:
 
 ```dotenv
-OPENAPI_PATH=/path/to/openapi.yaml
-OPENAPI_BASE_PATH=api       # when routes live under /api but the document does not say so
+OPENAPI_PROBE_PATH=/path/to/openapi.yaml
+OPENAPI_PROBE_BASE_PATH=api   # when routes live under /api but the document does not say so
 ```
+
+`php artisan vendor:publish --tag=config` copies `config/openapi-probe.php` if you prefer a file.
 
 ## Run
 

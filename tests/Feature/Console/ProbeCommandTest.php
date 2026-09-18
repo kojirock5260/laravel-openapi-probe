@@ -58,7 +58,7 @@ it('refuses to run in production unless forced', function (): void {
 });
 
 it('accepts null for nullable fields of an OpenAPI 3.0 document', function (): void {
-    config()->set('json-schema.path', __DIR__.'/../../fixtures/openapi-30.yaml');
+    config()->set('openapi-probe.path', __DIR__.'/../../fixtures/openapi-30.yaml');
     Route::get('profiles', static fn () => response()->json(['nickname' => null]));
 
     $this->artisan('openapi:probe', ['--strict' => true])

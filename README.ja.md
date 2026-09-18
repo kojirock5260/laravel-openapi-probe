@@ -7,12 +7,12 @@ Laravel 自身のリクエストパイプラインの上に組んであります
 
 [English](README.md)
 
-定義の読み込みと応答の検証は
-[kojirock5260/laravel-json-schema-validate](https://github.com/kojirock5260/laravel-json-schema-validate)
-に依存します。PHP 8.3 以上、Laravel 12 または 13 が必要です。
+PHP 8.3 以上、Laravel 12 または 13 が必要です。単体で動きます。定義の解析には
+[cebe/php-openapi](https://github.com/DEVizzent/cebe-php-openapi)、応答の照合には
+[opis/json-schema](https://opis.io/json-schema/) を使っています。
 
-OpenAPI 3.1 の定義はそのまま読みます。3.0 の定義は `nullable: true` を型の union に直した
-写しを一時ファイルに作って読みます。元のファイルには触りません。
+OpenAPI 3.1 の定義はそのまま読みます。3.0 の定義は `nullable: true` を型の union に
+メモリ上で直してから読みます。元のファイルには触りません。
 
 ## 何をするか
 
@@ -42,12 +42,15 @@ OpenAPI 3.1 の定義はそのまま読みます。3.0 の定義は `nullable: t
 composer require --dev kojirock5260/laravel-openapi-probe
 ```
 
-定義の場所は依存先パッケージの設定で指定します。詳細はそちらの README を参照してください。
+定義の場所を指定します。
 
 ```dotenv
-OPENAPI_PATH=/path/to/openapi.yaml
-OPENAPI_BASE_PATH=api       # ルートが /api 配下で、定義にその接頭辞が無い場合
+OPENAPI_PROBE_PATH=/path/to/openapi.yaml
+OPENAPI_PROBE_BASE_PATH=api   # ルートが /api 配下で、定義にその接頭辞が無い場合
 ```
+
+ファイルで設定したい場合は `php artisan vendor:publish --tag=config` で
+`config/openapi-probe.php` が配置されます。
 
 ## 実行
 

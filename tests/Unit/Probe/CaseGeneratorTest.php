@@ -6,9 +6,10 @@ declare(strict_types=1);
  * CaseGenerator が fixture の操作から、適合ケースと制約違反ケースを作ることを確認する。
  */
 
-use Kojirock5260\JsonSchemaValidate\Spec\OperationResolver;
+use Illuminate\Routing\Route;
 use Kojirock5260\OpenApiProbe\Probe\CaseGenerator;
 use Kojirock5260\OpenApiProbe\Probe\ProbeCase;
+use Kojirock5260\OpenApiProbe\Spec\OperationMatcher;
 
 /**
  * fixture の操作に対するケースを、説明をキーにして返す。
@@ -17,7 +18,7 @@ use Kojirock5260\OpenApiProbe\Probe\ProbeCase;
  */
 function casesFor(string $template, string $method): array
 {
-    $operation = (new OperationResolver(specRepository()))->locate($template, $method);
+    $operation = (new OperationMatcher(fixtureDocument()))->match(new Route([strtoupper($method)], $template, static fn () => null), $method);
 
     expect($operation)->not->toBeNull();
 

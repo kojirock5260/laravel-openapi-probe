@@ -6,9 +6,9 @@ namespace Kojirock5260\OpenApiProbe\Probe;
 
 use cebe\openapi\spec\Parameter;
 use cebe\openapi\spec\RequestBody;
-use Kojirock5260\JsonSchemaValidate\Spec\ResolvedOperation;
-use Kojirock5260\JsonSchemaValidate\Spec\SpecSchema;
-use Kojirock5260\JsonSchemaValidate\Validation\MediaTypeMatcher;
+use Kojirock5260\OpenApiProbe\Spec\JsonSchema;
+use Kojirock5260\OpenApiProbe\Spec\MatchedOperation;
+use Kojirock5260\OpenApiProbe\Validation\MediaType;
 use stdClass;
 
 /**
@@ -28,11 +28,11 @@ final readonly class CaseGenerator
     /**
      * 操作に対するケースを返す。先頭は常に spec に適合するリクエスト。
      *
-     * @param  ResolvedOperation  $operation  対象の操作
+     * @param  MatchedOperation  $operation  対象の操作
      * @param  int  $limit  返すケースの上限
      * @return list<ProbeCase>
      */
-    public function generate(ResolvedOperation $operation, int $limit): array
+    public function generate(MatchedOperation $operation, int $limit): array
     {
         $parameters = $this->parameters($operation);
         $path = [];
@@ -40,7 +40,7 @@ final readonly class CaseGenerator
         $headers = [];
 
         foreach ($parameters as $parameter) {
-            $schema = SpecSchema::toJsonSchema($parameter->schema);
+            $schema = JsonSchema::from($parameter->schema);
 
             if ($parameter->in === 'path') {
                 $path[$parameter->name] = $this->pathValue($schema);
@@ -74,7 +74,7 @@ final readonly class CaseGenerator
                 $cases[] = new ProbeCase("missing {$parameter->name}", false, $path, $without, $headers, $body);
             }
 
-            $schema = SpecSchema::toJsonSchema($parameter->schema);
+            $schema = JsonSchema::from($parameter->schema);
 
             if ($schema === null) {
                 continue;
@@ -172,7 +172,7 @@ final readonly class CaseGenerator
                 continue;
             }
 
-            $schema = SpecSchema::toJsonSchema($parameter->schema);
+            $schema = JsonSchema::from($parameter->schema);
             $format = $schema->format ?? null;
 
             if ($format !== 'date' && $format !== 'date-time') {
@@ -192,7 +192,7 @@ final readonly class CaseGenerator
      *
      * @return list<Parameter>
      */
-    private function parameters(ResolvedOperation $operation): array
+    private function parameters(MatchedOperation $operation): array
     {
         $merged = [];
 
@@ -210,7 +210,7 @@ final readonly class CaseGenerator
     /**
      * JSON の本文スキーマを返す。JSON 系のメディアタイプが無ければ null。
      */
-    private function bodySchema(ResolvedOperation $operation): ?object
+    private function bodySchema(MatchedOperation $operation): ?object
     {
         $requestBody = $operation->operation->requestBody;
 
@@ -219,8 +219,8 @@ final readonly class CaseGenerator
         }
 
         foreach ($requestBody->content as $mediaType => $media) {
-            if (MediaTypeMatcher::isJson((string) $mediaType)) {
-                return SpecSchema::toJsonSchema($media->schema);
+            if (MediaType::isJson((string) $mediaType)) {
+                return JsonSchema::from($media->schema);
             }
         }
 

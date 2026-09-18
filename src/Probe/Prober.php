@@ -8,8 +8,8 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
-use Kojirock5260\JsonSchemaValidate\Spec\ResolvedOperation;
-use Kojirock5260\JsonSchemaValidate\Validation\ResponseValidator;
+use Kojirock5260\OpenApiProbe\Spec\MatchedOperation;
+use Kojirock5260\OpenApiProbe\Validation\ResponseCheck;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -24,24 +24,24 @@ final readonly class Prober
     /**
      * @param  Kernel  $kernel  HTTP カーネル
      * @param  DatabaseManager  $db  トランザクションの巻き戻しに使う
-     * @param  ResponseValidator  $responses  応答の検証
+     * @param  ResponseCheck  $responses  応答の照合
      */
     public function __construct(
         private Kernel $kernel,
         private DatabaseManager $db,
-        private ResponseValidator $responses = new ResponseValidator,
+        private ResponseCheck $responses = new ResponseCheck,
     ) {}
 
     /**
      * ケースを 1 件送り、見つかった問題を返す。
      *
      * @param  Route  $route  対象のルート
-     * @param  ResolvedOperation  $operation  spec 上の操作
+     * @param  MatchedOperation  $operation  spec 上の操作
      * @param  ProbeCase  $case  送る内容
      * @param  array<string, string>  $headers  全リクエストに付けるヘッダー
      * @return list<Finding>
      */
-    public function probe(Route $route, ResolvedOperation $operation, ProbeCase $case, array $headers = []): array
+    public function probe(Route $route, MatchedOperation $operation, ProbeCase $case, array $headers = []): array
     {
         $request = $this->request($route, $operation, $case, $headers);
 
@@ -62,7 +62,7 @@ final readonly class Prober
      *
      * @param  array<string, string>  $headers  全リクエストに付けるヘッダー
      */
-    private function request(Route $route, ResolvedOperation $operation, ProbeCase $case, array $headers): Request
+    private function request(Route $route, MatchedOperation $operation, ProbeCase $case, array $headers): Request
     {
         $uri = '/'.ltrim($route->uri(), '/');
 
@@ -98,7 +98,7 @@ final readonly class Prober
      *
      * @return list<Finding>
      */
-    private function findings(ResolvedOperation $operation, ProbeCase $case, Response $response): array
+    private function findings(MatchedOperation $operation, ProbeCase $case, Response $response): array
     {
         $status = $response->getStatusCode();
         $name = $operation->describe();
@@ -111,10 +111,10 @@ final readonly class Prober
         if ($operation->responseFor($status) === null) {
             $findings[] = new Finding(Finding::UNDOCUMENTED_STATUS, $name, $case->label, $status, [$this->excerpt($response)]);
         } else {
-            $errors = $this->responses->validate($operation, $response);
+            $errors = $this->responses->errors($operation, $response);
 
             if ($errors !== []) {
-                $findings[] = new Finding(Finding::RESPONSE_MISMATCH, $name, $case->label, $status, $this->flatten($errors));
+                $findings[] = new Finding(Finding::RESPONSE_MISMATCH, $name, $case->label, $status, $errors);
             }
         }
 
@@ -127,25 +127,6 @@ final readonly class Prober
         }
 
         return $findings;
-    }
-
-    /**
-     * 検証エラーを "key: message" の一覧に崩す。
-     *
-     * @param  array<string, list<string>>  $errors  検証エラー
-     * @return list<string>
-     */
-    private function flatten(array $errors): array
-    {
-        $lines = [];
-
-        foreach ($errors as $key => $messages) {
-            foreach ($messages as $message) {
-                $lines[] = "{$key}: {$message}";
-            }
-        }
-
-        return $lines;
     }
 
     /**

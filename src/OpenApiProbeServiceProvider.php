@@ -8,16 +8,21 @@ use Illuminate\Support\ServiceProvider;
 use Kojirock5260\OpenApiProbe\Console\ProbeCommand;
 
 /**
- * openapi:probe コマンドを登録する。
- *
- * 定義の読み込みと応答の検証は kojirock5260/laravel-json-schema-validate に依存し、
- * そのサービスプロバイダが用意する SpecRepository と OperationResolver を使う。
+ * openapi:probe コマンドと設定を登録する。
  */
 final class OpenApiProbeServiceProvider extends ServiceProvider
 {
+    private const string CONFIG_PATH = __DIR__.'/../config/openapi-probe.php';
+
+    public function register(): void
+    {
+        $this->mergeConfigFrom(self::CONFIG_PATH, 'openapi-probe');
+    }
+
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
+            $this->publishes([self::CONFIG_PATH => config_path('openapi-probe.php')], 'config');
             $this->commands([ProbeCommand::class]);
         }
     }

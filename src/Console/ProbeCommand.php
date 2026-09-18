@@ -6,11 +6,11 @@ namespace Kojirock5260\OpenApiProbe\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Routing\Router;
-use Kojirock5260\JsonSchemaValidate\Spec\SpecRepository;
 use Kojirock5260\OpenApiProbe\Probe\CaseGenerator;
 use Kojirock5260\OpenApiProbe\Probe\Finding;
 use Kojirock5260\OpenApiProbe\Probe\Prober;
-use Kojirock5260\OpenApiProbe\Spec\ProbeSpec;
+use Kojirock5260\OpenApiProbe\Spec\Document;
+use Kojirock5260\OpenApiProbe\Spec\OperationMatcher;
 
 /**
  * spec からリクエストを生成してアプリケーションに送り、応答を spec と突き合わせるコマンド。
@@ -59,12 +59,10 @@ final class ProbeCommand extends Command
             $this->removeThrottle($router);
         }
 
-        $probeSpec = ProbeSpec::load(
-            (string) config('json-schema.path'),
-            (string) config('json-schema.base_path', ''),
+        $matcher = new OperationMatcher(
+            Document::load((string) config('openapi-probe.path')),
+            (string) config('openapi-probe.base_path', ''),
         );
-        $resolver = $probeSpec->resolver;
-        $spec = $probeSpec->repository;
 
         $generator = new CaseGenerator($this->stringOption('id', '1'));
         $headers = $this->headers();
@@ -82,7 +80,7 @@ final class ProbeCommand extends Command
                     continue;
                 }
 
-                $operation = $resolver->resolve($route, $method);
+                $operation = $matcher->match($route, $method);
 
                 if ($operation === null) {
                     continue;
@@ -109,7 +107,7 @@ final class ProbeCommand extends Command
         }
 
         if ($only === '') {
-            foreach ($this->missingRoutes($spec, $matched) as $finding) {
+            foreach ($this->missingRoutes($matcher, $matched) as $finding) {
                 $findings[] = $finding;
                 $this->report($finding);
             }
@@ -171,17 +169,13 @@ final class ProbeCommand extends Command
      * @param  array<string, true>  $matched  ルートが見つかった操作
      * @return list<Finding>
      */
-    private function missingRoutes(SpecRepository $spec, array $matched): array
+    private function missingRoutes(OperationMatcher $matcher, array $matched): array
     {
         $findings = [];
 
-        foreach ($spec->load()->paths->getPaths() as $template => $pathItem) {
-            foreach (array_keys($pathItem->getOperations()) as $method) {
-                $name = strtoupper((string) $method).' '.$template;
-
-                if (! isset($matched[$name])) {
-                    $findings[] = new Finding(Finding::MISSING_ROUTE, $name, 'no route matches this operation', 0);
-                }
+        foreach ($matcher->documented() as $name) {
+            if (! isset($matched[$name])) {
+                $findings[] = new Finding(Finding::MISSING_ROUTE, $name, 'no route matches this operation', 0);
             }
         }
 
