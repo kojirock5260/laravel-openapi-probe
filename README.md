@@ -98,5 +98,10 @@ documented. Seed the database first for deeper coverage.
 ## Where it stands
 
 Tried on Firefly III 6.7.2 with its official document: 242 operations,
-1,208 requests, 4 seconds, 244 findings, among them 28 server errors on
-malformed input and 25 operations returning an undocumented 422.
+1,208 requests, 4 seconds, 239 findings, among them 28 server errors on
+malformed input across 14 operations, and 22 operations returning an
+undocumented 422.
+
+## About development
+
+This project is built with the help of [Claude](https://claude.com) (Anthropic).
